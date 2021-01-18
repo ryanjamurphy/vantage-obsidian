@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-sample-plugin",
-  "version": "0.9.7",
-  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+  "name": "vantage-obsidian",
+  "version": "1.0.0",
+  "description": "Build advanced searches in Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
