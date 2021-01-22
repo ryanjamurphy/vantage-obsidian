@@ -3,7 +3,7 @@
 	"name": "Vantage - Advanced search builder",
 	"version": "1.0.0",
 	"minAppVersion": "0.9.12",
-	"description": "Build advanced searches in Obsidian.",
+	"description": "Build advanced search queries in Obsidian.",
 	"author": "ryanjamurphy",
 	"authorUrl": "https://axle.design",
 	"isDesktopOnly": false
