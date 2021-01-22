@@ -7,6 +7,11 @@ export default class MyVantagePlugin extends Plugin {
 	onload() {
 		console.log('Loading the Vantage plugin.');
 
+		let naturalLanguageDates = app.plugins.getPlugin('nldates-obsidian');
+		if (!naturalLanguageDates) {
+			new Notice("The Natural Language Dates plugin was not found. The Review plugin requires the Natural Language Dates plugin. Please install it first and make sure it is updated and enabled before using Vantage.");
+		}
+
 		this.addCommand({
 			id: 'build-search',
 			name: "Build a new search",
@@ -120,6 +125,10 @@ class VantageModal extends Modal {
 		let vantageSettingsDescription = contentEl.createEl("div", { "text": "Vantage helps create complex search queries. See Obsidian's search documentation for more."});
 		vantageSettingsDescription.addClass("setting-item-description");
 		let vantageSettingsDescriptionLink = contentEl.createEl("a", {"text": "https://publish.obsidian.md/help/Plugins/Search"});
+		let vantageSettingsLinebreakDiv = contentEl.createEl("div");
+		let vantageSettingsLinebreak = contentEl.createEl("br");
+		vantageSettingsLinebreakDiv.append(vantageSettingsLinebreak);
+		vantageSettingsLinebreakDiv.addClass("setting-item-description");
 		vantageSettingsDescriptionLink.addClass("setting-item-description");
 		vantageSettingsDescriptionLink.setAttr("href", "https://publish.obsidian.md/help/Plugins/Search");
 		let vantageSettingsRegexDescription = contentEl.createEl("div", {"text": "Many complex searches use Regular Expressions. These help us search for patterns in our text. Visit RegExr to learn more and to practice with regular expressions."});
@@ -129,6 +138,7 @@ class VantageModal extends Modal {
 		vantageSettingsRegexLink.addClass("setting-item-description");
 		vantageSettingsDescriptionSubdiv.append(vantageSettingsDescription);
 		vantageSettingsDescriptionSubdiv.append(vantageSettingsDescriptionLink);
+		vantageSettingsDescriptionSubdiv.append(vantageSettingsLinebreakDiv);
 		vantageSettingsDescriptionSubdiv.append(vantageSettingsRegexDescription);
 		vantageSettingsDescriptionSubdiv.append(vantageSettingsRegexLink);
 		vantageSettingsDescriptionDiv.append(vantageSettingsDescriptionSubdiv);
