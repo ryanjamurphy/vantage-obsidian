@@ -1,7 +1,6 @@
-import { App, Modal, ItemView, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, TFile, ToggleComponent, TextComponent, DropdownComponent, ButtonComponent } from 'obsidian';
+import { App, Modal, ItemView, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, TFile, ToggleComponent, TextComponent, DropdownComponent, ButtonComponent, Workspace } from 'obsidian';
 import { start } from 'repl';
 import { createDailyNote } from 'obsidian-daily-notes-interface';
-import * as moment from 'moment';
 
 export default class MyVantagePlugin extends Plugin {
 	onload() {
@@ -80,28 +79,28 @@ export default class MyVantagePlugin extends Plugin {
 		}
 	}
 
-	openAnchorPane(someLeaf: WorkspaceLeaf) {
-		let obsidianApp = this.app;
-		let currentLeaf = someLeaf;
-		let editor = obsidianApp.workspace.activeLeaf.view.sourceMode.cmEditor;
-		let currentFile = currentLeaf.view.file;
-		let currentFileName = currentFile.basename;
-		let doc = editor.getDoc();
-		let cursor = editor.getCursor();
+	// openAnchorPane(someLeaf: WorkspaceLeaf) { // Old method for an old design
+	// 	let obsidianApp = this.app;
+	// 	let currentLeaf = someLeaf;
+	// 	let editor = obsidianApp.workspace.activeLeaf.view.sourceMode.cmEditor;
+	// 	let currentFile = currentLeaf.view.file;
+	// 	let currentFileName = currentFile.basename;
+	// 	let doc = editor.getDoc();
+	// 	let cursor = editor.getCursor();
 
-		console.log(obsidianApp.metadataCache.getFileCache(currentFile));
+	// 	console.log(obsidianApp.metadataCache.getFileCache(currentFile));
 
-		let theBacklinks = this.getBacklinks(currentFile);
+	// 	let theBacklinks = this.getBacklinks(currentFile);
 
-		//This successfully generates a list of links to the current note, including the start and end position of those links. 
-		console.log(theBacklinks);
+	// 	//This successfully generates a list of links to the current note, including the start and end position of those links. 
+	// 	console.log(theBacklinks);
 
-		// ☐ How do I get the plugin to notice when a new backlink has been added, and refresh the list?
-		// ☐ How do I display this list in a pane that can be customized/moved around?
-		// ☐ How do I make sure the items in this list are links to their source?
-		// ☑︎ How do I do the above with tags? Answer: use search, riffing off of MrJackPhil's expand embeds workflow. See getSearch above
+	// 	// ☐ How do I get the plugin to notice when a new backlink has been added, and refresh the list?
+	// 	// ☐ How do I display this list in a pane that can be customized/moved around?
+	// 	// ☐ How do I make sure the items in this list are links to their source?
+	// 	// ☑︎ How do I do the above with tags? Answer: use search, riffing off of MrJackPhil's expand embeds workflow. See getSearch above
 
-	}
+	// }
 
 
 }
@@ -222,7 +221,6 @@ class VantageModal extends Modal {
 		tagInfoDiv.append(noteTagText);
 		let tagInput = contentEl.createEl("input", {"type": "text"});
 		tagControlDiv.append(tagInput);
-		// tagInput.setAttr("style", "float: right; width: 50%");
 		tagDiv.append(tagInfoDiv);
 		tagDiv.append(tagControlDiv);
 		vantageSettingsDiv.append(tagDiv);
@@ -243,7 +241,6 @@ class VantageModal extends Modal {
 		notesPathInfoDiv.append(notePathDescription);
 		let notesPathInput = contentEl.createEl("input", {"type": "text"});
 		notesPathControlDiv.append(notesPathInput);
-		// notesPathInput.setAttr("style", "float: right; width: 50%");
 		notesPathDiv.append(notesPathInfoDiv);
 		notesPathDiv.append(notesPathControlDiv);
 		vantageSettingsDiv.append(notesPathDiv);
@@ -572,17 +569,28 @@ class VantageModal extends Modal {
 					} 
 					if (!(naturalLanguageDates.getFormattedDate(parsedStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
 						embeddedSearchQuery = embeddedSearchQueryHeader + setSearchQuery() + embeddedSearchQueryFooter;
-						let doc = this.app.workspace.activeLeaf.view.sourceMode.cmEditor.getDoc();
+						// let doc = this.app.workspace.activeLeaf.view.sourceMode.cmEditor.getDoc();
+						let view = this.app.workspace.getActiveViewOfType(MarkdownView);
+						if (!view) {
+							new Notice("No editable document is open. Perhaps you meant to click \"New search\"?");
+							return;
+						}
+						this.close();
+						let doc = view.sourceMode.cmEditor.getDoc();
 						let cursor = doc.getCursor();
 						doc.replaceRange(embeddedSearchQuery, cursor);
-						this.close();
 					}
 				} else { // no dates have been entered, so the search can continue
 					embeddedSearchQuery = embeddedSearchQueryHeader + setSearchQuery() + embeddedSearchQueryFooter;
-					let doc = this.app.workspace.activeLeaf.view.sourceMode.cmEditor.getDoc();
-					let cursor = doc.getCursor();
-					doc.replaceRange(embeddedSearchQuery, cursor);
-					this.close();
+					let view = this.app.workspace.getActiveViewOfType(MarkdownView);
+						if (!view) {
+							new Notice("No editable document is open. Perhaps you meant to click \"New search\"?");
+							return;
+						}
+						this.close();
+						let doc = view.sourceMode.cmEditor.getDoc();
+						let cursor = doc.getCursor();
+						doc.replaceRange(embeddedSearchQuery, cursor);
 				}
 				
 			});
