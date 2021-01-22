@@ -1,6 +1,4 @@
 import { App, Modal, ItemView, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, TFile, ToggleComponent, TextComponent, DropdownComponent, ButtonComponent, Workspace } from 'obsidian';
-import { start } from 'repl';
-import { createDailyNote } from 'obsidian-daily-notes-interface';
 
 export default class MyVantagePlugin extends Plugin {
 	onload() {
