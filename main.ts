@@ -25,6 +25,15 @@ export default class MyVantagePlugin extends Plugin {
 			}
 		});
 
+		this.addRibbonIcon('magnifying-glass', 'Vantage - Advanced search builder', () => {
+				let leaf = this.app.workspace.activeLeaf;
+				if (leaf) {
+						new VantageModal(this.app).open();
+					return true;
+				}
+				return false;
+		});
+
 		// this.addSettingTab(new SampleSettingTab(this.app, this));
 	}
 
