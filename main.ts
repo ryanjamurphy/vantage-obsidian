@@ -4,9 +4,10 @@ export default class MyVantagePlugin extends Plugin {
 	onload() {
 		console.log('Loading the Vantage plugin.');
 
-		let naturalLanguageDates = app.plugins.getPlugin('nldates-obsidian');
-		if (!naturalLanguageDates) {
-			new Notice("The Natural Language Dates plugin was not found. The Review plugin requires the Natural Language Dates plugin. Please install it first and make sure it is updated and enabled before using Vantage.");
+		if (this.app.workspace.layoutReady) {
+			this.onLayoutReady();
+		} else {
+			this.app.workspace.on("layout-ready", this.onLayoutReady.bind(this));
 		}
 
 		this.addCommand({
@@ -35,6 +36,15 @@ export default class MyVantagePlugin extends Plugin {
 		});
 
 		// this.addSettingTab(new SampleSettingTab(this.app, this));
+	}
+
+	onLayoutReady() {
+		// Check for the Natural Language Dates plugin after all the plugins are loaded.
+		// If not found, tell the user to install it/initialize it.
+		let naturalLanguageDates = (<any>this.app).plugins.getPlugin('nldates-obsidian');
+		if (!naturalLanguageDates) {
+			new Notice("The Natural Language Dates plugin was not found. The Vantage plugin requires the Natural Language Dates plugin. Please install it first and make sure it is updated and enabled before using Vantage.");
+		}
 	}
 
 	onunload() {
@@ -80,10 +90,10 @@ export default class MyVantagePlugin extends Plugin {
 		this.app.internalPlugins.getPluginById('global-search').instance.openGlobalSearch(someSearchQuery);
 		await this.delay(5000);
 		let searchResults = this.app.workspace.getLeavesOfType('search')[0].view.dom.resultDoms;//hat-tip to MrJackPhil for figuring out how to play with Search
-		console.log(searchResults);
-		if (searchResults.length != 0) {
-			searchResults.forEach(eachFile => console.log(eachFile.file.basename));	
-		}
+		// console.log(searchResults);
+		// if (searchResults.length != 0) {
+		// 	searchResults.forEach(eachFile => console.log(eachFile.file.basename));	
+		// }
 	}
 
 	// openAnchorPane(someLeaf: WorkspaceLeaf) { // Old method for an old design
@@ -193,8 +203,8 @@ class VantageModal extends Modal {
 		startDateInfoDiv.append(startDateText);
 		let startDateControlDiv = contentEl.createEl("div");
 		startDateControlDiv.addClass("setting-item-control");
-		let startDateInput = contentEl.createEl("input", {"type": "text"});
-		startDateControlDiv.append(startDateInput);
+		let fileStartDateInput = contentEl.createEl("input", {"type": "text"});
+		startDateControlDiv.append(fileStartDateInput);
 		startDateDiv.append(startDateInfoDiv);
 		startDateDiv.append(startDateControlDiv);
 
@@ -206,8 +216,8 @@ class VantageModal extends Modal {
 		endDateInfoDiv.append(endDateText);
 		let endDateControlDiv = contentEl.createEl("div");
 		endDateControlDiv.addClass("setting-item-control");
-		let endDateInput = contentEl.createEl("input", {"type": "text"});
-		endDateControlDiv.append(endDateInput);
+		let fileEndDateInput = contentEl.createEl("input", {"type": "text"});
+		endDateControlDiv.append(fileEndDateInput);
 		endDateDiv.append(endDateInfoDiv);
 		endDateDiv.append(endDateControlDiv);
 
@@ -263,16 +273,16 @@ class VantageModal extends Modal {
 
 		function processDateRange(startDate: string, endDate: string) { 
 			console.log("Start date:");
-			let parsedStartDate = naturalLanguageDates.parseDate(startDate);
+			let parsedFileStartDate = naturalLanguageDates.parseDate(startDate);
 
 			console.log("End date:");
-			let parsedEndDate = naturalLanguageDates.parseDate(endDate);
+			let parsedFileEndDate = naturalLanguageDates.parseDate(endDate);
 
-			let currentDate = naturalLanguageDates.getFormattedDate(parsedStartDate.moment);
+			let currentDate = naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment);
 			let dateDirection = "forward";
-			let allDates = naturalLanguageDates.getFormattedDate(parsedStartDate.moment);
+			let allDates = naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment);
 
-			if (parsedEndDate.moment.isAfter(parsedStartDate.moment)) {
+			if (parsedFileEndDate.moment.isAfter(parsedFileStartDate.moment)) {
 				console.log("Dates go forward in time.");
 				dateDirection = "forward";
 			} else {
@@ -280,8 +290,8 @@ class VantageModal extends Modal {
 				console.log("Dates go backwards in time.");
 			}
 
-			while (!(currentDate === naturalLanguageDates.getFormattedDate(parsedEndDate.moment))) {
-				let currentDateMoment = parsedStartDate.moment;
+			while (!(currentDate === naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment))) {
+				let currentDateMoment = parsedFileStartDate.moment;
 				if (dateDirection === "forward") {
 					currentDateMoment = currentDateMoment.add(1, "days");
 				} else {
@@ -314,13 +324,13 @@ class VantageModal extends Modal {
 		function setSearchQuery() {
 			let searchQuery = "";
 			if (noteTitleContainsInput.value != "") {
-				if ((startDateInput.value != "") && (endDateInput.value != "")) {
-					searchQuery = searchQuery + "file:(" + noteTitleContainsInput.value + processDateRange(startDateInput.value, endDateInput.value) + ") ";
+				if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) {
+					searchQuery = searchQuery + "file:(" + noteTitleContainsInput.value + processDateRange(fileStartDateInput.value, fileEndDateInput.value) + ") ";
 				} else {
 					searchQuery = searchQuery + "file:(" + noteTitleContainsInput.value + ") ";
 				}
-			} else if ((startDateInput.value != "") && (endDateInput.value != "")) {
-				searchQuery = searchQuery + "file:(" + processDateRange(startDateInput.value, endDateInput.value) + ") ";
+			} else if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) {
+				searchQuery = searchQuery + "file:(" + processDateRange(fileStartDateInput.value, fileEndDateInput.value) + ") ";
 			}
 			if (tagInput.value != "") {
 				searchQuery = searchQuery + "(" + processTags(tagInput.value) + ") ";
@@ -331,7 +341,7 @@ class VantageModal extends Modal {
 
 			let newQueries = contentEl.querySelectorAll("div");
 			newQueries.forEach((div) => {
-				if ((div.id.contains("AND")) || (div.id.contains("OR"))) {
+				if ((div.id.contains("AND")) || (div.id.contains("OR")) || (div.id.contains("NOT"))) {
 					let contentQuery = div.querySelectorAll("input");
 					let subquery = contentQuery.item(0).value;
 					let selectBoxes = div.querySelectorAll("select");
@@ -353,7 +363,7 @@ class VantageModal extends Modal {
 					});
 					selectBoxes.forEach((select) => {
 						if (select.id.contains("List")) {
-							if (select.value == "") {
+							if (select.value.contains("any")) {
 								if ((subquery.contains("[a-zA-Z0-9_")) || subquery.contains("}[0-9]")) {
 									subquery = "(/" + subquery + "/)";
 								}
@@ -374,7 +384,7 @@ class VantageModal extends Modal {
 					});
 					selectBoxes.forEach((select) => {
 						if (select.id.contains("Type")) {
-							if (select.value == "") {
+							if (select.value.contains("note")) {
 								// do nothing
 							}
 							if (select.value.contains("section")) {
@@ -394,6 +404,9 @@ class VantageModal extends Modal {
 					} else if (div.id.contains("OR")) {
 						console.log("This is an OR query");
 						searchQuery = searchQuery + " OR " + subquery;
+					} else if (div.id.contains("NOT")) {
+						console.log("This is a NOT query");
+						searchQuery = searchQuery + " -" + subquery;
 					}
 				}
 			});
@@ -430,7 +443,7 @@ class VantageModal extends Modal {
 				queryType.multiple;
 				//queryType.setAttr("style", "float: right;");
 				queryType.setAttr("id", "Additional Query Type " + queryCount);
-				let defaultTypeOption = contentEl.createEl("option", { "value": "", "text": "notes"});
+				let defaultTypeOption = contentEl.createEl("option", { "value": "note", "text": "notes"});
 				defaultTypeOption.selected;
 				queryType.append(defaultTypeOption);
 				queryType.append(contentEl.createEl("option", { "value": "section", "text": "sections"}));
@@ -448,7 +461,7 @@ class VantageModal extends Modal {
 				listType.multiple;
 				//listType.setAttr("style", "float: right;");
 				listType.setAttr("id", "Additional Query List Type " + queryCount);
-				let defaultListTypeOption = contentEl.createEl("option", { "value": "", "text": "any line type"});
+				let defaultListTypeOption = contentEl.createEl("option", { "value": "any", "text": "any line type"});
 				defaultListTypeOption.selected;
 				listType.append(defaultListTypeOption);
 				listType.append(contentEl.createEl("option", { "value": "list item", "text": "list items"}));
@@ -502,7 +515,7 @@ class VantageModal extends Modal {
 				queryType.multiple;
 				//queryType.setAttr("style", "float: right;");
 				queryType.setAttr("id", "Additional Query Type " + queryCount);
-				let defaultTypeOption = contentEl.createEl("option", { "value": "", "text": "notes"});
+				let defaultTypeOption = contentEl.createEl("option", { "value": "note", "text": "notes"});
 				defaultTypeOption.selected;
 				queryType.append(defaultTypeOption);
 				queryType.append(contentEl.createEl("option", { "value": "section", "text": "sections"}));
@@ -520,7 +533,7 @@ class VantageModal extends Modal {
 				listType.multiple;
 				//listType.setAttr("style", "float: right;");
 				listType.setAttr("id", "Additional Query List Type " + queryCount);
-				let defaultListTypeOption = contentEl.createEl("option", { "value": "", "text": "any line type"});
+				let defaultListTypeOption = contentEl.createEl("option", { "value": "any", "text": "any line type"});
 				defaultListTypeOption.selected;
 				listType.append(defaultListTypeOption);
 				listType.append(contentEl.createEl("option", { "value": "list item", "text": "list items"}));
@@ -552,6 +565,77 @@ class VantageModal extends Modal {
 				vantageAddedQueriesDiv.append(newQueryDiv);
 			});
 
+			let addNewNotFieldButton = new ButtonComponent(vantageSettingsDiv)
+			.setButtonText("Add a NOT search token")
+			.setClass("mod-cta")
+			.onClick(() => {
+				let newQueryDiv = contentEl.createEl("div");
+				newQueryDiv.addClass("setting-item");
+				newQueryDiv.setAttr("id", "NOT query" + queryCount);
+				let newQueryInfoDiv = contentEl.createEl("div");
+				newQueryInfoDiv.addClass("setting-item-info");
+				
+				let newQueryControlDiv = contentEl.createEl("div");
+				newQueryControlDiv.addClass("setting-item-control")
+				let newQuerySentenceStart = contentEl.createEl("div", {"text": "NOT search⠀"})
+				newQueryControlDiv.append(newQuerySentenceStart);
+
+				// choose query type
+				let queryType = contentEl.createEl("select");
+				queryType.setAttr("class", "dropdown");
+				queryType.multiple;
+				//queryType.setAttr("style", "float: right;");
+				queryType.setAttr("id", "Additional Query Type " + queryCount);
+				let defaultTypeOption = contentEl.createEl("option", { "value": "note", "text": "notes"});
+				defaultTypeOption.selected;
+				queryType.append(defaultTypeOption);
+				queryType.append(contentEl.createEl("option", { "value": "section", "text": "sections"}));
+				queryType.append(contentEl.createEl("option", { "value": "block", "text": "blocks"}));
+				queryType.append(contentEl.createEl("option", { "value": "line", "text": "lines"}));
+				newQueryControlDiv.append(queryType);
+
+
+				let newQueryForText = contentEl.createEl("div", {"text": "⠀for⠀"});
+				newQueryControlDiv.append(newQueryForText);
+
+				// choose list type
+				let listType = contentEl.createEl("select");
+				listType.setAttr("class", "dropdown");
+				listType.multiple;
+				//listType.setAttr("style", "float: right;");
+				listType.setAttr("id", "Additional Query List Type " + queryCount);
+				let defaultListTypeOption = contentEl.createEl("option", { "value": "any", "text": "any line type"});
+				defaultListTypeOption.selected;
+				listType.append(defaultListTypeOption);
+				listType.append(contentEl.createEl("option", { "value": "list item", "text": "list items"}));
+				listType.append(contentEl.createEl("option", { "value": "incomplete tasks", "text": "incomplete tasks"}));
+				listType.append(contentEl.createEl("option", { "value": "completed tasks", "text": "completed tasks"}));
+				listType.append(contentEl.createEl("option", { "value": "all tasks", "text": "all tasks"}));
+				newQueryControlDiv.append(listType);
+
+				// choose query subtype
+				let querySubtype = contentEl.createEl("select");
+				querySubtype.setAttr("class", "dropdown");
+				querySubtype.multiple;
+				querySubtype.setAttr("id", "Additional Query Subtype " + queryCount);
+				// querySubtype.setAttr("style", "float: right;");
+				let defaultSubtypeOption = contentEl.createEl("option", { "value": "", "text": "with text containing"});
+				defaultSubtypeOption.selected;
+				querySubtype.append(defaultSubtypeOption);
+				querySubtype.append(contentEl.createEl("option", { "value": "with a link to notes with names containing", "text": "with links to notes with names containing"}));
+				querySubtype.append(contentEl.createEl("option", { "value": "with an email address", "text": "with email addresses (ignores the following search field)"}));
+				querySubtype.append(contentEl.createEl("option", { "value": "with a phone number", "text": "with phone numbers (ignores the following search field)"}));
+				newQueryControlDiv.append(querySubtype);
+
+				let newQuery = contentEl.createEl("input", {"type": "text"});
+				newQuery.setAttr("id", "NOT query " + queryCount);
+				queryCount = queryCount + 1;
+				newQueryControlDiv.append(newQuery);
+				newQueryDiv.append(newQueryInfoDiv);
+				newQueryDiv.append(newQueryControlDiv);
+				vantageAddedQueriesDiv.append(newQueryDiv);
+			});
+
 		let embeddedSearchButton = new ButtonComponent(vantageButtonsControlDiv)
 			.setButtonText("Create embedded search")
 			.setClass("mod-cta")
@@ -559,22 +643,22 @@ class VantageModal extends Modal {
 				let embeddedSearchQueryHeader = "```query\n";
 				let embeddedSearchQueryFooter = "\n```";
 				let embeddedSearchQuery: string;
-				startDateInput.removeAttribute("style");
-				endDateInput.removeAttribute("style");
-				if ((startDateInput.value != "") && (endDateInput.value != "")) { // If both date fields have values, the user is trying to search daily notes
-					let parsedStartDate = naturalLanguageDates.parseDate(startDateInput.value);
-					let parsedEndDate = naturalLanguageDates.parseDate(endDateInput.value);
-					if (naturalLanguageDates.getFormattedDate(parsedStartDate.moment).contains("Invalid")) { // if the start date cannot be processed, let the user know
+				fileStartDateInput.removeAttribute("style");
+				fileEndDateInput.removeAttribute("style");
+				if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) { // If both date fields have values, the user is trying to search daily notes
+					let parsedFileStartDate = naturalLanguageDates.parseDate(fileStartDateInput.value);
+					let parsedFileEndDate = naturalLanguageDates.parseDate(fileEndDateInput.value);
+					if (naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) { // if the start date cannot be processed, let the user know
 						console.log("Start date could not be processed.");
 						new Notice("Sorry, something seems to be wrong with that start date.");
-						startDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
+						fileStartDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 					}
-					if (naturalLanguageDates.getFormattedDate(parsedEndDate.moment).contains("Invalid")) { // if the end date cannot be processed, let the user know
+					if (naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid")) { // if the end date cannot be processed, let the user know
 						console.log("End date could not be processed.");
 						new Notice("Sorry, something seems to be wrong with that end date.");
-						endDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
+						fileEndDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 					} 
-					if (!(naturalLanguageDates.getFormattedDate(parsedStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
+					if (!(naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
 						embeddedSearchQuery = embeddedSearchQueryHeader + setSearchQuery() + embeddedSearchQueryFooter;
 						// let doc = this.app.workspace.activeLeaf.view.sourceMode.cmEditor.getDoc();
 						let view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -606,9 +690,34 @@ class VantageModal extends Modal {
 			.setButtonText("New search")
 			.setClass("mod-cta")
 			.onClick(() => {
-					let searchQuery = setSearchQuery();
-					vantagePlugin.getSearch(searchQuery);
-					this.close();
+					let searchQuery: string;
+					fileStartDateInput.removeAttribute("style");
+					fileEndDateInput.removeAttribute("style");
+					if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) { // If both date fields have values, the user is trying to search daily notes
+						let parsedFileStartDate = naturalLanguageDates.parseDate(fileStartDateInput.value);
+						let parsedFileEndDate = naturalLanguageDates.parseDate(fileEndDateInput.value);
+						if (naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) { // if the start date cannot be processed, let the user know
+							console.log("Start date could not be processed.");
+							new Notice("Sorry, something seems to be wrong with that start date.");
+							fileStartDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
+							return;
+						}
+						if (naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid")) { // if the end date cannot be processed, let the user know
+							console.log("End date could not be processed.");
+							new Notice("Sorry, something seems to be wrong with that end date.");
+							fileEndDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
+							return;
+						} 
+						if (!(naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
+							searchQuery = setSearchQuery();
+							this.close();
+							vantagePlugin.getSearch(searchQuery);
+						}
+					} else { // no dates have been entered, so the search can continue
+						searchQuery = setSearchQuery();
+						this.close();
+						vantagePlugin.getSearch(searchQuery);
+					}
 			});
 
 		vantageButtonsDiv.append(vantageButtonsControlDiv);
