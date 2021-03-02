@@ -400,13 +400,13 @@ class VantageModal extends Modal {
 					});
 					if (div.id.contains("AND")) {
 						console.log("This is an AND query");
-						searchQuery = searchQuery + " " + subquery;
+						searchQuery = searchQuery + " (" + subquery + ")";
 					} else if (div.id.contains("OR")) {
 						console.log("This is an OR query");
-						searchQuery = searchQuery + " OR " + subquery;
+						searchQuery = searchQuery + " OR (" + subquery + ")";
 					} else if (div.id.contains("NOT")) {
 						console.log("This is a NOT query");
-						searchQuery = searchQuery + " -" + subquery;
+						searchQuery = searchQuery + " -(" + subquery + ")";
 					}
 				}
 			});

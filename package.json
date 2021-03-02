@@ -1,6 +1,6 @@
 {
   "name": "vantage-obsidian",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Build advanced searches in Obsidian.",
   "main": "main.js",
   "scripts": {
