@@ -129,6 +129,7 @@ class VantageModal extends Modal {
 
 	onOpen() {
 		let {contentEl} = this;
+		contentEl.parentElement.addClass("vantage-modal");
 		let vantagePlugin = this.app.plugins.getPlugin("vantage-obsidian");
 		let naturalLanguageDates = this.app.plugins.getPlugin('nldates-obsidian'); // Get the Natural Language Dates plugin.
 		this.titleEl.setText("Vantage - Advanced Search");

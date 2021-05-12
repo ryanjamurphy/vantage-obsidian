@@ -1,4 +1,5 @@
-/* Sets all the text color to red! */
-body {
-    color: red;
+.vantage-modal {
+    overflow-y: auto;
+	max-height: 50rem;
+	overflow-x: hidden;
 }
