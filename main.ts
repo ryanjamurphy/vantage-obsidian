@@ -129,6 +129,7 @@ class VantageModal extends Modal {
 
 	onOpen() {
 		let {contentEl} = this;
+		let searchModal = this;
 		contentEl.parentElement.addClass("vantage-modal");
 		let vantagePlugin = this.app.plugins.getPlugin("vantage-obsidian");
 		let naturalLanguageDates = this.app.plugins.getPlugin('nldates-obsidian'); // Get the Natural Language Dates plugin.
@@ -177,6 +178,7 @@ class VantageModal extends Modal {
 		let noteTitleContainsText = contentEl.createEl("span", { "text": "Note title contains: " });
 		noteTitleContainsText.addClass("setting-item-name");
 		let noteTitleContainsInput = contentEl.createEl("input", {"type": "text"});
+		noteTitleContainsInput.id = "note-title-input";
 		//noteTitleContainsInput.setAttr("style", "float: right; width: 50%");
 		noteTitleInfoDiv.append(noteTitleContainsText);
 		noteTitleControlDiv.append(noteTitleContainsInput);
@@ -271,6 +273,28 @@ class VantageModal extends Modal {
 
 
 		contentEl.append(vantageSettingsDiv);
+
+		let focusInputBox = contentEl.querySelector("#note-title-input");
+		focusInputBox.focus();
+
+		let queryDivs = contentEl.querySelectorAll("div");
+		queryDivs.forEach((div) => {
+			let inputBoxes = div.querySelectorAll("input");
+			inputBoxes.forEach((inputBox) => {
+				inputBox.addEventListener('keypress', function (keypressed) {
+					if (keypressed.key === 'Enter') {
+						initiateSearch();
+					}
+				});
+			});
+		});
+
+		function initiateSearch() {
+			let searchQuery = setSearchQuery();
+			searchModal.close();
+			vantagePlugin.getSearch(searchQuery);
+		}
+
 
 		function processDateRange(startDate: string, endDate: string) { 
 			console.log("Start date:");
@@ -492,6 +516,24 @@ class VantageModal extends Modal {
 				newQueryDiv.append(newQueryInfoDiv);
 				newQueryDiv.append(newQueryControlDiv);
 				vantageAddedQueriesDiv.append(newQueryDiv);
+
+				let inputBoxes = vantageAddedQueriesDiv.querySelectorAll("input");
+				inputBoxes.forEach((inputBox) => {
+					inputBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
+
+				let optionBoxes = vantageAddedQueriesDiv.querySelectorAll("select");
+				optionBoxes.forEach((optionBox) => {
+					optionBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
 			});
 
 		let addNewOrFieldButton = new ButtonComponent(vantageSettingsDiv)
@@ -564,6 +606,24 @@ class VantageModal extends Modal {
 				newQueryDiv.append(newQueryInfoDiv);
 				newQueryDiv.append(newQueryControlDiv);
 				vantageAddedQueriesDiv.append(newQueryDiv);
+
+				let inputBoxes = vantageAddedQueriesDiv.querySelectorAll("input");
+				inputBoxes.forEach((inputBox) => {
+					inputBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
+
+				let optionBoxes = vantageAddedQueriesDiv.querySelectorAll("select");
+				optionBoxes.forEach((optionBox) => {
+					optionBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
 			});
 
 			let addNewNotFieldButton = new ButtonComponent(vantageSettingsDiv)
@@ -635,6 +695,24 @@ class VantageModal extends Modal {
 				newQueryDiv.append(newQueryInfoDiv);
 				newQueryDiv.append(newQueryControlDiv);
 				vantageAddedQueriesDiv.append(newQueryDiv);
+
+				let inputBoxes = vantageAddedQueriesDiv.querySelectorAll("input");
+				inputBoxes.forEach((inputBox) => {
+					inputBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
+
+				let optionBoxes = vantageAddedQueriesDiv.querySelectorAll("select");
+				optionBoxes.forEach((optionBox) => {
+					optionBox.addEventListener('keypress', function (keypressed) {
+						if (keypressed.key === 'Enter') {
+							initiateSearch();
+						}
+					});
+				});
 			});
 
 		let embeddedSearchButton = new ButtonComponent(vantageButtonsControlDiv)
@@ -710,14 +788,10 @@ class VantageModal extends Modal {
 							return;
 						} 
 						if (!(naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
-							searchQuery = setSearchQuery();
-							this.close();
-							vantagePlugin.getSearch(searchQuery);
+							initiateSearch();
 						}
 					} else { // no dates have been entered, so the search can continue
-						searchQuery = setSearchQuery();
-						this.close();
-						vantagePlugin.getSearch(searchQuery);
+						initiateSearch();
 					}
 			});
 
