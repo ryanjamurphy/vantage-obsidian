@@ -297,16 +297,14 @@ class VantageModal extends Modal {
 
 
 		function processDateRange(startDate: string, endDate: string) { 
-			console.log("Start date:");
 			let parsedFileStartDate = naturalLanguageDates.parseDate(startDate);
-
-			console.log("End date:");
+			
 			let parsedFileEndDate = naturalLanguageDates.parseDate(endDate);
+			console.debug("Start date:" + parsedFileStartDate.formattedString + ". End date: " + parsedFileEndDate.formattedString + ".");
 
-			let currentDate = naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment);
+			
+			// figure out if the user input dates in chronological or reverse-chronological order. e.g., did they write "yesterday" then "tomorrow," or "tomorrow" then "yesterday"?
 			let dateDirection = "forward";
-			let allDates = naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment);
-
 			if (parsedFileEndDate.moment.isAfter(parsedFileStartDate.moment)) {
 				console.log("Dates go forward in time.");
 				dateDirection = "forward";
@@ -314,16 +312,22 @@ class VantageModal extends Modal {
 				dateDirection = "backward";
 				console.log("Dates go backwards in time.");
 			}
+			
+			
+			// iterate through the dates from start to end, adding the title of each daily note to a string we'll use as a search query.
+			let allDates = parsedFileStartDate.formattedString; // initialize the search query string
+			let currentDate = parsedFileStartDate;
 
-			while (!(currentDate === naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment))) {
-				let currentDateMoment = parsedFileStartDate.moment;
-				if (dateDirection === "forward") {
+			while ((!(currentDate.formattedString === parsedFileEndDate.formattedString))) {
+				let currentDateMoment = currentDate.moment;
+				if (dateDirection == "forward") {
 					currentDateMoment = currentDateMoment.add(1, "days");
 				} else {
 					currentDateMoment = currentDateMoment.subtract(1, "days");
 				}
-				let nextDate = naturalLanguageDates.getFormattedDate(currentDateMoment);
-				allDates = allDates + " OR " + nextDate;
+				let nextDate = naturalLanguageDates.parseDate(currentDateMoment.format("MMMM D YYYY"));
+				allDates = allDates + " OR " + nextDate.formattedString;
+				console.debug(currentDate + " === " + parsedFileEndDate.formattedString + ": " + (currentDate === parsedFileEndDate.formattedString))
 				currentDate = nextDate;
 			}
 
@@ -727,17 +731,17 @@ class VantageModal extends Modal {
 				if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) { // If both date fields have values, the user is trying to search daily notes
 					let parsedFileStartDate = naturalLanguageDates.parseDate(fileStartDateInput.value);
 					let parsedFileEndDate = naturalLanguageDates.parseDate(fileEndDateInput.value);
-					if (naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) { // if the start date cannot be processed, let the user know
+					if (parsedFileStartDate.formattedString.contains("Invalid")) { // if the start date cannot be processed, let the user know
 						console.log("Start date could not be processed.");
 						new Notice("Sorry, something seems to be wrong with that start date.");
 						fileStartDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 					}
-					if (naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid")) { // if the end date cannot be processed, let the user know
+					if (parsedFileEndDate.formattedString.contains("Invalid")) { // if the end date cannot be processed, let the user know
 						console.log("End date could not be processed.");
 						new Notice("Sorry, something seems to be wrong with that end date.");
 						fileEndDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 					} 
-					if (!(naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
+					if (!(parsedFileStartDate.formattedString.contains("Invalid")) && !(parsedFileEndDate.formattedString.contains("Invalid"))) { // otherwise go ahead with the search
 						embeddedSearchQuery = embeddedSearchQueryHeader + setSearchQuery() + embeddedSearchQueryFooter;
 						// let doc = this.app.workspace.activeLeaf.view.sourceMode.cmEditor.getDoc();
 						let view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -775,19 +779,19 @@ class VantageModal extends Modal {
 					if ((fileStartDateInput.value != "") && (fileEndDateInput.value != "")) { // If both date fields have values, the user is trying to search daily notes
 						let parsedFileStartDate = naturalLanguageDates.parseDate(fileStartDateInput.value);
 						let parsedFileEndDate = naturalLanguageDates.parseDate(fileEndDateInput.value);
-						if (naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) { // if the start date cannot be processed, let the user know
+						if (parsedFileStartDate.formattedString.contains("Invalid")) { // if the start date cannot be processed, let the user know
 							console.log("Start date could not be processed.");
 							new Notice("Sorry, something seems to be wrong with that start date.");
 							fileStartDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 							return;
 						}
-						if (naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid")) { // if the end date cannot be processed, let the user know
+						if (parsedFileEndDate.formattedString.contains("Invalid")) { // if the end date cannot be processed, let the user know
 							console.log("End date could not be processed.");
 							new Notice("Sorry, something seems to be wrong with that end date.");
 							fileEndDateInput.setAttr("style", "border-color: var(--background-modifier-error); border-width: .1em;");
 							return;
 						} 
-						if (!(naturalLanguageDates.getFormattedDate(parsedFileStartDate.moment).contains("Invalid")) && !(naturalLanguageDates.getFormattedDate(parsedFileEndDate.moment).contains("Invalid"))) { // otherwise go ahead with the search
+						if (!(parsedFileStartDate.formattedString.contains("Invalid")) && !(parsedFileEndDate.formattedString.contains("Invalid"))) { // otherwise go ahead with the search
 							initiateSearch();
 						}
 					} else { // no dates have been entered, so the search can continue
