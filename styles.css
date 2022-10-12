@@ -3,4 +3,9 @@
     overflow-y: auto;
 	max-height: 50rem;
 	overflow-x: hidden;
+	width: 80vw;
+}
+
+.vantage-modal input[type='text'] {
+	width: 100%;
 }
